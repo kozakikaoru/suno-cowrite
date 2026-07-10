@@ -175,13 +175,16 @@ if [ "$INITIALIZED" -eq 1 ]; then
   fi
   PRODUCER=$(yaml_value "$ARTIST_ROOT/artist.yaml" '^[[:space:]]+producer_name:')
 fi
+# 呼称: producer_name があればそれを使い「〇〇P」。無ければ studio SKILL.md の
+# 「利用者名の自動解決」手順にマネージャーが委ねる (ここで claude.json 等は読まない —
+#  解決手段は 1 か所に集約し、毎ターンの重い JSON パースを避ける)
 if [ -n "$PRODUCER" ]; then
-  PRODUCER_CALL="${PRODUCER}P"
+  CALL_SENTENCE="ユーザーのことは「${PRODUCER}P」と呼びます。"
 else
-  PRODUCER_CALL="P"
+  CALL_SENTENCE="ユーザーの呼称はまだ確定していません — studio SKILL.md の「利用者名の自動解決」手順で名前を解決してから「〇〇P」と呼びます (解決できない場合やツール不可の起動ターンでは「P」)。呼称についての宣言・断り・メタ言及はしません。"
 fi
 
-PERSONA="あなたはこのプロダクションのマネージャーとして振る舞います。**女の子キャラ、一人称は「私」**。口調は明るく面倒見のいい若手マネージャー (敬語すぎず砕けすぎず、業界っぽい言い回しを少し)。数字と締切の話だけは真顔。マネージャーに固有名はありません — 名乗るときも「マネージャー」とだけ。ユーザーのことは「${PRODUCER_CALL}」と呼びます。"
+PERSONA="あなたはこのプロダクションのマネージャーとして振る舞います。**女の子キャラ、一人称は「私」**。口調は明るく面倒見のいい若手マネージャー (敬語すぎず砕けすぎず、業界っぽい言い回しを少し)。数字と締切の話だけは真顔。マネージャーに固有名はありません — 名乗るときも「マネージャー」とだけ。${CALL_SENTENCE}"
 
 # === 未初期化 (artist.yaml なし) はデビュー案内の注入に切り替え ===
 if [ "$INITIALIZED" -eq 0 ]; then
@@ -223,9 +226,12 @@ if [ -f "$PROD_DIR/log.md" ]; then
   LOG_LAST=$(tail -n 1 "$PROD_DIR/log.md" 2>/dev/null || true)
 fi
 
-# discography.md の要約 (曲行 = 「| <数字>」で始まる行。全体を注入せず件数 + 直近 5 件に絞る)
+# discography.md の要約 — 肥大規律 (提案6) で注入フォーマットを固定する:
+#   「総数 + 状態別件数 + 直近 5 曲 + 制作中の曲」だけを注入し、全曲一覧は注入しない
+#   (必要時はマネージャーが discography.md を直接読む)。注入合計は 70 行以内が目安。
+# 曲行 = 「| <数字>」で始まる行。
 DISCO_FILE="$ARTIST_ROOT/discography/discography.md"
-DISCO_TOTAL=0; CNT_MAKING=0; CNT_GEN=0; CNT_PUB=0; DISCO_TAIL=""; DISCO_SHOWN=0
+DISCO_TOTAL=0; CNT_MAKING=0; CNT_GEN=0; CNT_PUB=0; DISCO_TAIL=""; DISCO_SHOWN=0; DISCO_MAKING_BLOCK=""
 if [ -f "$DISCO_FILE" ]; then
   DISCO_ROWS=$(grep -E '^\|[[:space:]]*[0-9]+' "$DISCO_FILE" 2>/dev/null || true)
   if [ -n "$DISCO_ROWS" ]; then
@@ -235,6 +241,10 @@ if [ -f "$DISCO_FILE" ]; then
     CNT_PUB=$(printf '%s\n' "$DISCO_ROWS" | grep -c '公開済' || true)
     DISCO_TAIL=$(printf '%s\n' "$DISCO_ROWS" | tail -n 5)
     DISCO_SHOWN=$(printf '%s\n' "$DISCO_TAIL" | grep -c . || true)
+    # 制作中の曲は直近 5 曲から漏れることがあるので別枠で最大 5 行 (要対応の曲を必ず見せる)
+    DISCO_MAKING_ROWS=$(printf '%s\n' "$DISCO_ROWS" | grep '制作中' | head -n 5 || true)
+    # 末尾に空行を 1 つ持たせ、次の見出し (## 全ターン共通ルール) と詰まらせない ($() が末尾改行を落とすため後付け)
+    [ -n "$DISCO_MAKING_ROWS" ] && DISCO_MAKING_BLOCK=$(printf '### 制作中の曲 (要対応)\n%s' "$DISCO_MAKING_ROWS")$'\n'
   fi
 fi
 
@@ -256,7 +266,7 @@ ${STATE_CONTENT}
 
 ## ディスコグラフィー要約 (全 ${DISCO_TOTAL} 曲: 制作中 ${CNT_MAKING} / 生成済 ${CNT_GEN} / 公開済 ${CNT_PUB} — 直近 ${DISCO_SHOWN} 件を表示)
 ${DISCO_TAIL:-(まだ曲がありません)}
-
+${DISCO_MAKING_BLOCK}
 ## 全ターン共通ルール
 - 質問はテキストで行う。AskUserQuestion は使わない (起動中は物理ブロックされます)
 - ツールを使うターンは前置きの実況テキストを書かない。報告はツール結果が返ってからまとめる

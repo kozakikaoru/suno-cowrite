@@ -45,6 +45,27 @@ STYLE_TAG_COUNT_MIN = 4             # Style タグ数の推奨下限
 STYLE_TAG_COUNT_MAX = 15            # Style タグ数の推奨上限
 EARLY_WARN_RATIO = 0.9              # ハード上限の 90% 到達で早期警告
 
+# 派生リリース用スキーマ予約 (提案8 / 契約 C5)。v1 は許容と WARN のみ、派生フローは v1.1。
+VALID_SONG_TYPES = ("original", "cover", "remaster", "extend")   # song_type の既定 4 値 (既定 original)
+
+# 行密度 (かなモーラ) 検査の定数 (提案4)。日本語入稿版の早口事故を生成前に WARN で知らせる。
+# 小書きの拗音・小母音 (ゃゅょ・ぁぃぅぇぉ 等) は直前のかなと合わせて 1 モーラなので数えない。
+# 小書きの促音「っ/ッ」と長音「ー」は 1 モーラとして数える (日本語の詩学の慣習)。
+SMALL_KANA_NO_MORA = frozenset("ぁぃぅぇぉゃゅょゎゕゖァィゥェォャュョヮ")
+LONG_VOWEL_MARKS = frozenset("ーｰ")
+# セクション種別ごとの 1 行あたりモーラ数の目安上限 (かな概算)。キーは _normalize_tag 済みの形。
+SECTION_MORA_CAP = {
+    "verse": 20, "pre chorus": 20, "chorus": 22, "post chorus": 18,
+    "hook": 18, "bridge": 20, "breakdown": 20, "drop": 16,
+    "rap": 34, "spoken word": 30,
+}
+DEFAULT_MORA_CAP = 24               # 表にないセクションの目安上限
+MORA_REFERENCE_BPM = 100            # この BPM を基準にテンポ連動で目安を伸縮する
+MORA_TEMPO_FACTOR_MIN = 0.7         # テンポ連動係数の下限 (速い曲でも目安を下げすぎない)
+MORA_TEMPO_FACTOR_MAX = 1.4         # テンポ連動係数の上限 (遅い曲でも目安を上げすぎない)
+MORA_IMBALANCE_DIFF = 12           # 同一セクション内の (最長 - 最短) がこれ以上で行長ばらつき WARN
+MORA_IMBALANCE_MIN_LINES = 3       # 行長ばらつき検査の対象にする最小本文行数
+
 # 必須フィールド (欠落 = FAIL。設計書 §5-2 の song.json スキーマより)
 REQUIRED_FIELDS = ("title", "style", "lyrics_suno", "model", "language")
 
@@ -86,6 +107,12 @@ PROPER_NOUN_RE = re.compile(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b")
 
 # 日本語入稿版に残ってはいけない括弧 (リフレイン誤解釈リスク)
 PAREN_CHARS = "()（）"
+
+# Style から BPM を拾う (「92 bpm feel」表記。テンポ連動のモーラ目安に使う)
+BPM_RE = re.compile(r"(\d{2,3})\s*bpm", re.IGNORECASE)
+
+# 単独行のセクションタグ ([Verse 1] / [Bridge: piano only] など) を判定する
+SECTION_HEADER_RE = re.compile(r"^\[([^\[\]]+)\]$")
 
 
 def _normalize_tag(name):
@@ -343,6 +370,138 @@ def check_ja_parens(language, lyrics, rep):
         rep.ok("日本語入稿版の括弧: 残存なし")
 
 
+def _count_kana_mora(text):
+    """1 行のかなモーラ数を概算する (決定論的)。
+    ひらがな/カタカナは 1 字 1 モーラ、小書き拗音・小母音は 0、促音「っ」・長音「ー」は 1 として数える。
+    ローマ字 (助詞 wa/e/wo や混在英単語) は母音の数で 1 モーラ相当に近似する。"""
+    mora = 0
+    for ch in text:
+        if ch in SMALL_KANA_NO_MORA:
+            continue
+        code = ord(ch)
+        if 0x3041 <= code <= 0x3096 or 0x30A1 <= code <= 0x30FA:  # ひらがな / カタカナ
+            mora += 1
+        elif ch in LONG_VOWEL_MARKS:
+            mora += 1
+        elif ch in "aiueoAIUEO":  # ローマ字助詞・混在英単語の母音を 1 モーラ相当で近似
+            mora += 1
+    return mora
+
+
+def _extract_bpm(values):
+    """Style / Style(Persona 適用時) から BPM 値を拾う (最初の一致)。無ければ None。"""
+    for key in ("style", "style_with_persona"):
+        text = values.get(key) or ""
+        m = BPM_RE.search(text)
+        if m:
+            return int(m.group(1))
+    return None
+
+
+def _tempo_scaled_cap(base_cap, bpm):
+    """テンポが速いほど 1 行に詰め込める目安を厳しく (低く) する。係数はクランプする。"""
+    if not bpm:
+        return base_cap
+    factor = MORA_REFERENCE_BPM / bpm
+    factor = max(MORA_TEMPO_FACTOR_MIN, min(MORA_TEMPO_FACTOR_MAX, factor))
+    return max(1, int(round(base_cap * factor)))
+
+
+def check_mora_density(language, lyrics, values, rep):
+    """入稿版歌詞の行ごとのかなモーラ数を概算し、早口の恐れと行長ばらつきを WARN で知らせる (提案4)。
+    日本語 (language: ja) の歌ものだけが対象。モーラは概算のため FAIL にはしない (表現の自由を奪わない)。"""
+    if (language or "").strip().lower() != "ja":
+        return
+    if values.get("instrumental") is True:
+        return
+
+    bpm = _extract_bpm(values)
+    sections = []            # [(section_key, [(lineno, mora), ...]), ...] を出現順に
+    current_lines = None
+    for lineno, raw in enumerate(lyrics.split("\n"), 1):
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        header = SECTION_HEADER_RE.match(stripped)
+        if header:
+            key = _normalize_tag(header.group(1).split(":", 1)[0])
+            key = re.sub(r"\s+\d+$", "", key)     # 末尾の番号 (Verse 2 → verse) を落とす
+            current_lines = []
+            sections.append((key, current_lines))
+            continue
+        mora = _count_kana_mora(TAG_RE.sub(" ", stripped))  # 行内タグを除いて数える
+        if mora <= 0:
+            continue
+        if current_lines is None:                  # セクションタグより前の本文
+            current_lines = []
+            sections.append(("", current_lines))
+        current_lines.append((lineno, mora))
+
+    if not any(lines for _, lines in sections):
+        return  # 数えられる本文行がない (インスト等)
+
+    over, uneven = [], []
+    for key, lines in sections:
+        if not lines:
+            continue
+        cap = _tempo_scaled_cap(SECTION_MORA_CAP.get(key, DEFAULT_MORA_CAP), bpm)
+        label = f"[{key.title()}]" if key else "(冒頭)"
+        for lineno, mora in lines:
+            if mora > cap:
+                over.append(f"{lineno}行目 {label} {mora}モーラ (目安 {cap})")
+        moras = [m for _, m in lines]
+        if len(moras) >= MORA_IMBALANCE_MIN_LINES and (max(moras) - min(moras)) >= MORA_IMBALANCE_DIFF:
+            uneven.append(f"{label} {min(moras)}〜{max(moras)}モーラ")
+
+    tempo_note = f"テンポ {bpm}bpm 連動" if bpm else "固定目安"
+    if over:
+        shown = " / ".join(over[:6])
+        more = f" ほか {len(over) - 6} 件" if len(over) > 6 else ""
+        rep.warn(
+            f"早口の恐れ ({tempo_note}): 次の行がセクションのモーラ目安を超えています — {shown}{more}。"
+            f"かなモーラは概算です。テンポに対して詰め込みすぎなら行の分割・語数削減を検討してください。"
+        )
+    if uneven:
+        shown = " / ".join(uneven[:5])
+        rep.warn(
+            f"行長のばらつき ({tempo_note}): {shown} — 同一セクション内で行の長さの開きが大きいと譜割りが不安定になりやすいです"
+            f" (意図的な字余り/字足らずなら無視してかまいません)。"
+        )
+    if not over and not uneven:
+        rep.ok(f"行密度 (かなモーラ概算・{tempo_note}): 各セクションの目安内")
+
+
+def check_song_type(data, rep):
+    """派生リリース用フィールド (song_type / derived_from) の予約検査 (契約 C5 / 提案8)。
+    未使用なら無言。既定 4 値以外や整合しない指定は WARN のみ (FAIL にしない。v1 は予約だけ)。"""
+    raw_type = data.get("song_type")
+    derived = data.get("derived_from")
+    if raw_type is None and derived is None:
+        return  # 既定 (original / 派生なし)。予約フィールド未使用時は報告しない
+    song_type = raw_type.strip().lower() if isinstance(raw_type, str) and raw_type.strip() else "original"
+    if raw_type is not None and not (isinstance(raw_type, str) and song_type in VALID_SONG_TYPES):
+        rep.warn(
+            f"song_type: {raw_type!r} は既定の 4 値 ({' / '.join(VALID_SONG_TYPES)}) にありません。"
+            f"派生リリースは v1.1 で扱うため、誤記でなければ original として進めてください。"
+        )
+        return
+    if song_type == "original":
+        if derived not in (None, "", 0):
+            rep.warn(
+                f"song_type が original なのに derived_from ({derived!r}) が設定されています。"
+                f"派生曲なら song_type を cover / remaster / extend にしてください。"
+            )
+        else:
+            rep.ok("曲種別 (song_type): original")
+    elif derived in (None, "", 0):
+        rep.warn(
+            f"song_type が {song_type} (派生曲) なのに derived_from が未指定です。"
+            f"元曲の番号 (song_no) を derived_from に入れてください。"
+        )
+    else:
+        rep.ok(f"曲種別 (song_type): {song_type} / 元曲 (derived_from): {derived}")
+
+
 def check_exclude_styles(exclude, rep):
     """Exclude Styles の項目数 (6 項目以上 = WARN)"""
     if exclude is None or not exclude.strip():
@@ -390,9 +549,11 @@ def run_checks(data, rep):
         check_brackets(lyrics, rep)
         check_meta_tag_vocab(lyrics, rep)
         check_ja_parens(values["language"], lyrics, rep)
+        check_mora_density(values["language"], lyrics, values, rep)
     check_exclude_styles(values["exclude_styles"], rep)
     check_slider("Weirdness", values["weirdness"], rep)
     check_slider("Style Influence", values["style_influence"], rep)
+    check_song_type(data, rep)
 
 
 # =============================================================================
@@ -453,8 +614,9 @@ def build_parser():
             "        スライダー 0〜100 外 / メタタグ [ ] の不整合 / 必須フィールド欠落\n"
             "  WARN: Style タグ数 4 未満・15 超 / 入稿歌詞 > 3,000 字 / Exclude 6 項目以上 /\n"
             "        スライダー 81 以上 / 語彙一覧にないメタタグ / 日本語入稿版の括弧残存 /\n"
-            "        Style 内の固有名詞らしき大文字連語 / 各上限の 90% 到達\n"
-            "文字数は Unicode コードポイント数で数えます。\n"
+            "        Style 内の固有名詞らしき大文字連語 / 各上限の 90% 到達 /\n"
+            "        日本語の行密度 (かなモーラ) 目安超過・行長ばらつき / song_type が既定外\n"
+            "文字数は Unicode コードポイント数で数えます。かなモーラ数は概算です。\n"
             "終了コード: 0 = PASS/WARN のみ, 1 = FAIL あり, 2 = 引数の誤り\n"
             "最終行に機械可読サマリを出します (例: RESULT: FAIL errors=2 warnings=1)"
         ),
