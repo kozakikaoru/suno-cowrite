@@ -2,7 +2,7 @@
 
 Suno (suno.com) 用のバーチャル音楽プロダクションを再現する Claude Code プラグイン。
 
-`/suno-artist-production:studio` でマネージャー (受付ペルソナ) が起動し、演出家・作曲家・作詞家・リサーチャー・アナリスト・キャラクターデザイナーの 6 職種サブエージェントへ実務を自動振り分けする。**1 ディレクトリ = 1 アーティスト**で継続プロデュースし、Suno Custom Mode の全設定値 (Title / Style / Lyrics / Exclude / スライダー / Persona 運用) を「欄ごとに貼り付けられる形式 (paste.md) + 機械可読 JSON (song.json)」で出力する。
+`/suno-artist-production:studio` でマネージャー (受付ペルソナ) が起動し、演出家・作曲家・作詞家・客演ラッパー・リサーチャー・アナリスト・キャラクターデザイナーの 7 職種サブエージェントへ実務を自動振り分けする。**1 ディレクトリ = 1 アーティスト**で継続プロデュースし、Suno Custom Mode の全設定値 (Title / Style / Lyrics / Exclude / スライダー / Persona 運用) を「欄ごとに貼り付けられる形式 (paste.md) + 機械可読 JSON (song.json)」で出力する。
 
 ## 動作要件
 
@@ -64,13 +64,14 @@ suno_artist_production/
 │   ├── director.md                      # 演出家: 世界観設計・コンセプトブリーフ
 │   ├── composer.md                      # 作曲家: Style/Exclude/スライダー/モデル/Persona 適用判断
 │   ├── lyricist.md                      # 作詞家: 作品版 + 入稿版の 2 表記、オリジナリティ自己検査
+│   ├── rapper.md                        # 客演ラッパー: 韻バンク納品 (heavy 曲のみ参加)
 │   ├── researcher.md                    # リサーチャー: トレンド/仕様調査、歌詞の Web 照合
 │   ├── analyst.md                       # アナリスト: YouTube 数値レポート (公開データ/API の 2 モード)
 │   └── character-designer.md            # キャラクターデザイナー: キャラ設定・画像生成プロンプト
 ├── skills/
 │   ├── studio/SKILL.md                  # メイン入口 (マネージャーの動作定義)
 │   ├── debut/ song/ oneshot/ trend/ analyze/ meeting/ update-spec/ connect-youtube/
-│   ├── songwriting/                     # 作詞ノウハウ資料集 (references/01〜08)
+│   ├── songwriting/                     # 作詞ノウハウ資料集 (references/01〜10)
 │   └── suno-spec/                       # Suno 仕様スナップショット (references/spec.md + update-log.md)
 ├── hooks/hooks.json                     # UserPromptSubmit + PreToolUse
 └── scripts/

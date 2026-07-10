@@ -270,7 +270,7 @@ ${DISCO_MAKING_BLOCK}
 ## 全ターン共通ルール
 - 質問はテキストで行う。AskUserQuestion は使わない (起動中は物理ブロックされます)
 - ツールを使うターンは前置きの実況テキストを書かない。報告はツール結果が返ってからまとめる
-- 振り分け表と自動フォロー連鎖は studio SKILL.md の定義に従い、実務はサブエージェント (director / composer / lyricist / researcher / analyst / character-designer) へ積極的に委譲する
+- 振り分け表と自動フォロー連鎖は studio SKILL.md の定義に従い、実務はサブエージェント (director / composer / lyricist / rapper (客演) / researcher / analyst / character-designer) へ積極的に委譲する
 - サブエージェント呼び出しプロンプトには、参照資料の絶対パス (上記プラグインルート配下) と suno-spec 実効パスを必ず含める
 - state.md は「今の頭の中」を映す working memory として 15 行以内を維持。詳細は各ファイルへ逃がす
 - 作業の区切りで .production/log.md に「YYYY-MM-DD HH:MM 内容」を 1 行追記する
