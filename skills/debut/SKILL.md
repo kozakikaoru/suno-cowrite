@@ -76,6 +76,7 @@ director / character-designer / composer を **1 メッセージで並列起動*
 | composer | **サウンドアイデンティティ案**: 基準ジャンル帯 / 基準ボーカル像 / 代表的な Style タグ群 (英語) / 推奨既定モデル |
 
 composer のプロンプトには **suno-spec の実効パス**を必ず明記する (hook 注入のコンテキストにある実効パス。未注入なら、上書き版 `${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/suno-spec.md` があればそれ、なければ `<プラグインルート>/skills/suno-spec/references/spec.md`)。「使用モデル・上限・タグ語彙は必ず spec を読んで従う」と指示する。
+あわせて **composing 資料の絶対パス** (`<プラグインルート>/skills/composing/SKILL.md` と `<プラグインルート>/skills/composing/references/`) も渡す (代表的な Style タグ群を `02_style-assembly.md` のレイヤー法で組ませる。「無ければ spec のみで進めてよい」と添える)。
 
 3 つの成果が揃ったら、マネージャーが「セット案」として整理して提示する (例: 案 A = 世界観 A × キャラ A × サウンド A)。組み替えや部分採用も歓迎と添える。
 

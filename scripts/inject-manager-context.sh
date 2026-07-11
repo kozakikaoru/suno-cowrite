@@ -10,6 +10,7 @@
 #        - マネージャーペルソナ要約 (固有名なし。P の呼び方は artist.yaml の producer_name)
 #        - artist.yaml 全文 / .production/state.md 全文 / discography.md の要約 (直近 5 件)
 #        - suno-spec の実効パス (同梱版と上書き版の調査日比較) と鮮度警告 (60 日超過で再調査推奨)
+#        - style-vocab (Style 語彙辞典) の実効パスと調査日・鮮度警告 (同一規則、閾値のみ 90 日)
 #        - プラグインルート絶対パス (サブエージェントへの参照資料パス受け渡しに使う)
 #      artist.yaml が無いディレクトリでは「未初期化 (debut 案内)」の注入に切り替える
 #      (トリガーターンにも注入するのは、起動直後の「状況付き挨拶」をツールなしで行うため。設計 §4-2)
@@ -158,6 +159,41 @@ else
   SPEC_LINE="見つかりません (同梱版・上書き版とも不在)。/suno-artist-production:update-spec で作成できます"
 fi
 
+# === style-vocab (Style 語彙辞典) の実効パス決定 — spec と同一規則を流用。鮮度閾値のみ 90 日 (設計 D26) ===
+BUNDLED_VOCAB="$PLUGIN_ROOT/skills/suno-spec/references/style-vocab.md"
+OVERRIDE_VOCAB="${XDG_CONFIG_HOME:-${HOME:-}/.config}/suno-artist-production/style-vocab.md"
+
+VOCAB_BUNDLED_DATE=$(spec_date "$BUNDLED_VOCAB")
+VOCAB_OVERRIDE_DATE=$(spec_date "$OVERRIDE_VOCAB")
+
+VOCAB_PATH=""
+VOCAB_DATE=""
+VOCAB_KIND=""
+if [ -n "$VOCAB_OVERRIDE_DATE" ] && { [ -z "$VOCAB_BUNDLED_DATE" ] || [ "$VOCAB_OVERRIDE_DATE" \> "$VOCAB_BUNDLED_DATE" ]; }; then
+  VOCAB_PATH="$OVERRIDE_VOCAB"; VOCAB_DATE="$VOCAB_OVERRIDE_DATE"; VOCAB_KIND="上書き版"
+elif [ -f "$BUNDLED_VOCAB" ]; then
+  VOCAB_PATH="$BUNDLED_VOCAB"; VOCAB_DATE="$VOCAB_BUNDLED_DATE"; VOCAB_KIND="同梱版"
+elif [ -f "$OVERRIDE_VOCAB" ]; then
+  VOCAB_PATH="$OVERRIDE_VOCAB"; VOCAB_DATE="$VOCAB_OVERRIDE_DATE"; VOCAB_KIND="上書き版"
+fi
+
+VOCAB_LINE=""
+if [ -n "$VOCAB_PATH" ]; then
+  if [ -n "$VOCAB_DATE" ]; then
+    # 未来日付 (時計ずれ等) でも「-1 日経過」とならないよう 0 でクランプする
+    VOCAB_AGE=$(python3 -c "import datetime as d; print(max(0, (d.date.today() - d.date.fromisoformat('$VOCAB_DATE')).days))" 2>/dev/null || echo "")
+    if [ -n "$VOCAB_AGE" ] && [ "$VOCAB_AGE" -gt 90 ] 2>/dev/null; then
+      VOCAB_LINE="${VOCAB_KIND} ${VOCAB_PATH} (調査日: ${VOCAB_DATE}、${VOCAB_AGE} 日経過。90 日を超えているので /suno-artist-production:update-spec (対象: style-vocab) での再調査を P に提案してください)"
+    else
+      VOCAB_LINE="${VOCAB_KIND} ${VOCAB_PATH} (調査日: ${VOCAB_DATE}、${VOCAB_AGE:-?} 日経過)"
+    fi
+  else
+    VOCAB_LINE="${VOCAB_KIND} ${VOCAB_PATH} (調査日不明 — ヘッダに「調査日: YYYY-MM-DD」がありません)"
+  fi
+else
+  VOCAB_LINE="見つかりません (同梱版・上書き版とも不在)"
+fi
+
 # === artist.yaml から表示用の値を取り出す ===
 yaml_value() {
   # yaml_value <file> <anchored-key-regex> — 値を取り出し、引用符と行末コメントを剥がす
@@ -196,6 +232,7 @@ ${PERSONA}
 - プラグインルート: ${PLUGIN_ROOT}
 - 日時: ${TODAY} ${NOW}
 - suno-spec 実効版: ${SPEC_LINE}
+- style-vocab 実効版: ${VOCAB_LINE}
 
 ## 対応方針
 - 継続プロデュースするアーティストを立ち上げたい場合: /suno-artist-production:debut (アーティスト誕生フロー) を案内する
@@ -256,6 +293,7 @@ ${PERSONA}
 - プラグインルート: ${PLUGIN_ROOT} (サブエージェントへ渡す参照資料パスの基点)
 - 日時: ${TODAY} ${NOW}
 - suno-spec 実効版: ${SPEC_LINE}
+- style-vocab 実効版: ${VOCAB_LINE}
 - 前回の作業: ${LOG_LAST:-(記録なし)}
 
 ## artist.yaml (全文)

@@ -52,7 +52,7 @@ claude
 | `:update-spec` | Suno 仕様の再調査・更新 (上書き版 spec の生成) |
 | `:connect-youtube` | YouTube Analytics API の OAuth 接続セットアップ (任意機能) |
 
-`skills/songwriting/` と `skills/suno-spec/` はコマンドではなく**参照資料コンテナ** (SKILL.md は目次役)。
+`skills/songwriting/`・`skills/composing/`・`skills/suno-spec/` はコマンドではなく**参照資料コンテナ** (SKILL.md は目次役)。
 
 ## プラグインのディレクトリ構成
 
@@ -71,8 +71,9 @@ suno_artist_production/
 ├── skills/
 │   ├── studio/SKILL.md                  # メイン入口 (マネージャーの動作定義)
 │   ├── debut/ song/ oneshot/ trend/ analyze/ meeting/ update-spec/ connect-youtube/
-│   ├── songwriting/                     # 作詞ノウハウ資料集 (references/01〜10)
-│   └── suno-spec/                       # Suno 仕様スナップショット (references/spec.md + update-log.md)
+│   ├── songwriting/                     # 作詞ノウハウ資料集 (references/01〜11)
+│   ├── composing/                       # 作曲ノウハウ資料集 (references/01〜09)
+│   └── suno-spec/                       # Suno 仕様スナップショット (references/spec.md + style-vocab.md + update-log.md)
 ├── hooks/hooks.json                     # UserPromptSubmit + PreToolUse
 └── scripts/
     ├── inject-manager-context.sh        # 毎ターン注入 (ペルソナ + アーティスト状況 + spec 鮮度)
@@ -87,7 +88,7 @@ suno_artist_production/
 |---|---|
 | `plugin.json` | name / description / version / author のみ。hooks・agents・skills はディレクトリ規約で自動発見 |
 | `hooks/hooks.json` | UserPromptSubmit → inject-manager-context.sh / PreToolUse (Bash\|Read\|Grep\|Glob\|AskUserQuestion) → block-startup-tools.sh |
-| `inject-manager-context.sh` | (1) `/…:studio` 単独ターンの判定マーカー作成 (2) 起動中は毎ターン、ペルソナ + artist.yaml 全文 + state.md + discography 要約 + suno-spec 実効パスと鮮度 + プラグインルート絶対パスを注入。artist.yaml が無ければ「未初期化 (debut 案内)」注入に切替 |
+| `inject-manager-context.sh` | (1) `/…:studio` 単独ターンの判定マーカー作成 (2) 起動中は毎ターン、ペルソナ + artist.yaml 全文 + state.md + discography 要約 + suno-spec 実効パスと鮮度 + style-vocab 実効パスと鮮度 + プラグインルート絶対パスを注入。artist.yaml が無ければ「未初期化 (debut 案内)」注入に切替 |
 | `block-startup-tools.sh` | トリガーターンに Bash/Read/Grep/Glob/AskUserQuestion を exit 2 でブロック。AskUserQuestion は起動中 (ACTIVE がある間) つねにブロック |
 | `agents/*.md` | 各職種のシステムプロンプト。Suno のバージョン固有事実は書かず、suno-spec 実効パスを読む規約 |
 | `skills/*/SKILL.md` | スラッシュ起動 + マネージャーの Skill ツール自発起動の両対応 (単一実装・二経路) |
@@ -116,7 +117,7 @@ suno_artist_production/
 ## アーキテクチャメモ (開発者向け)
 
 - **2 段階起動**: UserPromptSubmit フックが「コマンドのみのターン」を判定して `/tmp/suno-artist-production-trigger-<session>-<roothash>` マーカーを作成し、PreToolUse フックがそれを見て対象ツールを exit 2 で物理ブロックする。マーカーは session_id + アーティストルートで一意 (並列セッション安全)。60 分で自動掃除
-- **毎ターン注入**: 起動中 (`.production/ACTIVE` あり) は、ペルソナ・artist.yaml 全文・state.md・discography 要約 (直近 5 件)・suno-spec 鮮度・プラグインルート絶対パスを注入する。サブエージェントはプラグインのパスを知らないため、マネージャーが Agent プロンプトに参照資料の絶対パスを必ず含める規約
+- **毎ターン注入**: 起動中 (`.production/ACTIVE` あり) は、ペルソナ・artist.yaml 全文・state.md・discography 要約 (直近 5 件)・suno-spec 鮮度・style-vocab 鮮度・プラグインルート絶対パスを注入する。サブエージェントはプラグインのパスを知らないため、マネージャーが Agent プロンプトに参照資料の絶対パスを必ず含める規約
 - **suno-spec の 2 層構造**: 同梱版 `skills/suno-spec/references/spec.md` と上書き版 `${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/suno-spec.md`。ヘッダの「調査日: YYYY-MM-DD」を比較して新しい方を実効とし、60 日超過で再調査 (`:update-spec`) を提案する。Suno のモデル名・文字数上限などのバージョン固有事実はコードやエージェント定義にハードコードしない (validate_song.py の上限定数のみ v1 の割り切りで、update-spec が不一致を警告する)
 - **オリジナリティ 3 層ガード**: エージェント規則 (引用・実在名の禁止) / 作詞家の自己検査 (チェックリスト) / 機械 + Web 照合 (validate_song.py + リサーチャーの引用符付き検索)
 - **YouTube 連携**: 既定は API キー不要の公開データモード。任意で `:connect-youtube` により Analytics API (OAuth) へ拡張。認証情報は `~/.config/suno-artist-production/` に保存 (アーティストディレクトリには置かない)。提案タイミングはライフサイクル規約 (studio SKILL.md) で制御し、`youtube.publish: false` の間は一切持ち出さない

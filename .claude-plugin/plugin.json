@@ -1,7 +1,7 @@
 {
   "name": "suno-artist-production",
-  "description": "[v0.2.0] Suno 用バーチャル音楽プロダクション。/suno-artist-production:studio で起動。マネージャーが受付になり、演出家・作曲家・作詞家・ラッパー(客演)・リサーチャー・アナリスト・キャラクターデザイナーの7職種へ自動振り分け。1ディレクトリ=1アーティストで継続プロデュース。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー/Persona運用) を貼り付け可能な形+JSONで出力。YouTube は公開データ分析に加え、任意で Analytics API 連携 (/suno-artist-production:connect-youtube) に対応。",
-  "version": "0.2.0",
+  "description": "[v0.3.0] Suno 用バーチャル音楽プロダクション。/suno-artist-production:studio で起動。マネージャーが受付になり、演出家・作曲家・作詞家・ラッパー(客演)・リサーチャー・アナリスト・キャラクターデザイナーの7職種へ自動振り分け。1ディレクトリ=1アーティストで継続プロデュース。作曲知識ライブラリ (skills/composing) + Style 語彙辞典 (style-vocab) で作曲家の知識を拡張。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー/Persona運用) を貼り付け可能な形+JSONで出力。YouTube は公開データ分析に加え、任意で Analytics API 連携 (/suno-artist-production:connect-youtube) に対応。",
+  "version": "0.3.0",
   "author": {
     "name": "kayu"
   }

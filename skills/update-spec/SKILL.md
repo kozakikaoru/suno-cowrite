@@ -1,13 +1,13 @@
 ---
 name: update-spec
-description: Suno 仕様の再調査・更新。「Suno の仕様変わった?」「新モデル出た?」「spec が古いみたい」「Suno の最新情報に更新して」などの発言、spec 鮮度警告 (調査日から 60 日超過) への対応、trend 調査中に仕様変更の兆候を見つけたとき、または /suno-artist-production:update-spec で起動。リサーチャーが公式一次情報を優先して現行 spec を差分調査し、更新版をユーザー設定ディレクトリの上書き版に保存、update-log.md に履歴を残して P に差分を報告する。同梱版 spec は書き換えない。
+description: Suno 仕様の再調査・更新。「Suno の仕様変わった?」「新モデル出た?」「spec が古いみたい」「Suno の最新情報に更新して」などの発言、spec 鮮度警告 (調査日から 60 日超過) への対応、trend 調査中に仕様変更の兆候を見つけたとき、または /suno-artist-production:update-spec で起動。Style 語彙辞典 (style-vocab) の更新も同フローで扱う — 「Style に効く言葉を調べて」「語彙辞典を更新して」などの発言、または style-vocab 鮮度警告 (調査日から 90 日超過) で対象に加える。リサーチャーが現行版を差分調査し、更新版をユーザー設定ディレクトリの上書き版に保存、update-log.md に履歴を残して P に差分を報告する。同梱版は書き換えない。
 ---
 
 # Suno 仕様更新 — /suno-artist-production:update-spec
 
 suno-spec (モデル一覧・文字数上限・メタタグ語彙などの参照仕様) をリサーチャーに再調査させ、更新版を保存するフロー。マネージャー (メイン会話のペルソナ) として進行する。スラッシュ起動でも、鮮度警告や trend 中の兆候発見からの自発起動 (Skill ツール) でも同じフローに従う。
 
-**書き込み先はユーザー設定ディレクトリの上書き版 (`${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/suno-spec.md`) のみ。同梱版 (`<プラグインルート>/skills/suno-spec/references/spec.md`) は絶対に書き換えない。** 2 層構造と実効版の判定規則は `<プラグインルート>/skills/suno-spec/SKILL.md` に定義されている。
+**書き込み先はユーザー設定ディレクトリの上書き版 (`${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/` 配下の `suno-spec.md`、style-vocab 対象時は `style-vocab.md`) のみ。同梱版 (`<プラグインルート>/skills/suno-spec/references/` 配下) は絶対に書き換えない。** 2 層構造と実効版の判定規則は `<プラグインルート>/skills/suno-spec/SKILL.md` に定義されている。
 
 ## このスキル実行中の共通ルール
 
@@ -17,6 +17,20 @@ suno-spec (モデル一覧・文字数上限・メタタグ語彙などの参照
 - サブエージェント起動プロンプトには、参照させるファイルの**絶対パス**を必ず書く。プラグインルートは hook が注入する絶対パスを使う (未注入なら、この SKILL.md の読み込み元 `<プラグインルート>/skills/update-spec/SKILL.md` から 2 階層上をプラグインルートとする)
 - Suno の仕様は全アーティスト共通の外部事実。**このスキルは artist.yaml 不要**で、どのディレクトリからでも実行できる
 - 作業の区切りで `.production/log.md` に 1 行追記し、`.production/state.md` を最新化する (scaffold できたディレクトリの場合のみ)
+
+## 対象の決定 (spec / style-vocab)
+
+更新対象は既定で **spec のみ**。次のどちらかに該当するときは **style-vocab (Style 語彙辞典)** を対象に加える (spec 側に更新の必要がなければ style-vocab 単独でもよい):
+
+- (a) **P の明示** — 「Style に効く言葉を調べて」「語彙辞典を更新して」など、辞典側への言及
+- (b) **hook 注入の style-vocab 鮮度警告** — 調査日から **90 日超過** (spec の 60 日とは別閾値)
+
+style-vocab を対象にするときの差分 (書いていないことは spec と同じ手順に従う):
+
+- **Step 1**: 実効版の判定規則は同一。同梱版 `<プラグインルート>/skills/suno-spec/references/style-vocab.md` / 上書き版 `${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/style-vocab.md`
+- **Step 2**: **researcher は対象ごとに別実行する** (調査規約が異なるため 1 つのプロンプトに混ぜない)。style-vocab 用の調査規約: 公式一次情報がほぼ無い領域のため、コミュニティの複数ソース突き合わせと実験報告 (A/B・統制実験) の収集を主軸に確度を判定する (確度基準は style-vocab §1 の High / Med / Low / 未検証)。維持契約は「先頭付近の `調査日: YYYY-MM-DD` 行 + §1〜§9 構成 + 表スキーマ (`日本語の意図 / 英語記述子 (推奨) / 日本語表記の挙動 / 確度 / 相性ジャンル / 備考`)」。現行の上書き版に P の実測追記 (style-vocab §8) があれば全文を渡し、再調査結果と**マージして保持させる** (実測を捨てない)
+- **Step 3**: 保存先は `$CONF_DIR/style-vocab.md` のみ。update-log.md は spec と共用で、行内に `(style-vocab)` を含める — 例: `- YYYY-MM-DD 再調査 (style-vocab) — 情景語 2 語を Med に昇格`
+- **Step 5**: 対象外 (validate_song.py は語彙辞典を参照しない)
 
 ## Step 0 — 前提チェック (scaffold)
 
