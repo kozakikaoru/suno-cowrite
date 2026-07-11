@@ -71,12 +71,14 @@ director / character-designer / composer を **1 メッセージで並列起動*
 
 | 相手 | 返してもらうもの |
 |---|---|
-| director | **世界観案**: テーマ / 物語の核 / 語彙パレット (使う言葉・避ける言葉) / NG 領域。アーティスト名未定なら名前候補も |
+| director | **世界観案**: テーマ / 物語の核 / 語彙パレット (使う言葉・避ける言葉) / NG 領域 + **ビジュアルの方向** (トーン&マナー・色。directing/04) / アーティスト名未定なら**名前候補** (directing/05) |
 | character-designer | **キャラ案**: 外見 / 性格 / 口調 / 年齢感 / NG 事項 |
 | composer | **サウンドアイデンティティ案**: 基準ジャンル帯 / 基準ボーカル像 / 代表的な Style タグ群 (英語) / 推奨既定モデル |
 
 composer のプロンプトには **suno-spec の実効パス**を必ず明記する (hook 注入のコンテキストにある実効パス。未注入なら、上書き版 `${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/suno-spec.md` があればそれ、なければ `<プラグインルート>/skills/suno-spec/references/spec.md`)。「使用モデル・上限・タグ語彙は必ず spec を読んで従う」と指示する。
 あわせて **composing 資料の絶対パス** (`<プラグインルート>/skills/composing/SKILL.md` と `<プラグインルート>/skills/composing/references/`) も渡す (代表的な Style タグ群を `02_style-assembly.md` のレイヤー法で組ませる。「無ければ spec のみで進めてよい」と添える)。
+
+director のプロンプトには **directing 資料の絶対パス** (`<プラグインルート>/skills/directing/SKILL.md` と `<プラグインルート>/skills/directing/references/`) を渡す。「世界観を新規に作るので 01 を主に読み、ビジュアルの方向を出すなら 04、アーティスト名候補を出すなら 05 も読む (読み方ガイドは SKILL.md 側)。無ければ従来どおり world.md 起点で進めてよい」と添える。director の世界観案には **ビジュアルの方向 (トーン&マナー・色)** と (名前未定なら) **アーティスト名候補** を含めさせる (character-designer の並列出力とは Step 3 でマネージャーが統合する)。
 
 3 つの成果が揃ったら、マネージャーが「セット案」として整理して提示する (例: 案 A = 世界観 A × キャラ A × サウンド A)。組み替えや部分採用も歓迎と添える。
 

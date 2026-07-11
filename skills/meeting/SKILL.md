@@ -69,6 +69,7 @@ fi
 **director** (subagent_type: `suno-artist-production:director`) — 世界観整合:
 
 - 絶対パス: `world.md` / `profile.md` / `discography/discography.md` / `strategy/direction.md` / 直近 1〜2 曲の `song.json`・`notes.md` (あれば)
+- **directing 資料 (演出ライブラリ)**: `<プラグインルート>/skills/directing/SKILL.md` と `<プラグインルート>/skills/directing/references/` の絶対パス。「読み方ガイドに従い、物語・被り検知は主に `03_discography-narrative.md` を読む (世界観に深く踏み込むなら 01 も)。無ければ従来どおり world.md / discography.md 起点で進めてよい」と添える
 - 返してもらうもの: これまでの方針・作品と世界観のズレの有無 (整合性判定) / 守るべき軸 / 世界観の観点からの次の展開候補 2〜3 個
 
 ## Step 3 — 集約と提示 (会議メモ)

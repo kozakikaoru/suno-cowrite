@@ -52,7 +52,7 @@ claude
 | `:update-spec` | Suno 仕様の再調査・更新 (上書き版 spec の生成) |
 | `:connect-youtube` | YouTube Analytics API の OAuth 接続セットアップ (任意機能) |
 
-`skills/songwriting/`・`skills/composing/`・`skills/suno-spec/` はコマンドではなく**参照資料コンテナ** (SKILL.md は目次役)。
+`skills/songwriting/`・`skills/composing/`・`skills/directing/`・`skills/suno-spec/` はコマンドではなく**参照資料コンテナ** (SKILL.md は目次役)。
 
 ## プラグインのディレクトリ構成
 
@@ -61,7 +61,7 @@ suno_artist_production/
 ├── .claude-plugin/plugin.json           # プラグインマニフェスト
 ├── README.md
 ├── agents/                              # サブエージェント定義 (frontmatter は description のみ)
-│   ├── director.md                      # 演出家: 世界観設計・コンセプトブリーフ
+│   ├── director.md                      # 演出家: 世界観設計・ブリーフ・ビジュアル方向・上位ネーミング (skills/directing 参照)
 │   ├── composer.md                      # 作曲家: Style/Exclude/スライダー/モデル/Persona 適用判断
 │   ├── lyricist.md                      # 作詞家: 作品版 + 入稿版の 2 表記、オリジナリティ自己検査
 │   ├── rapper.md                        # 客演ラッパー: 韻バンク納品 (heavy 曲のみ参加)
@@ -73,6 +73,7 @@ suno_artist_production/
 │   ├── debut/ song/ oneshot/ trend/ analyze/ meeting/ update-spec/ connect-youtube/
 │   ├── songwriting/                     # 作詞ノウハウ資料集 (references/01〜11)
 │   ├── composing/                       # 作曲ノウハウ資料集 (references/01〜09)
+│   ├── directing/                       # 演出ノウハウ資料集 (references/01〜05: 世界観/コンセプト/物語/ビジュアル/ネーミング)
 │   └── suno-spec/                       # Suno 仕様スナップショット (references/spec.md + style-vocab.md + update-log.md)
 ├── hooks/hooks.json                     # UserPromptSubmit + PreToolUse
 └── scripts/
