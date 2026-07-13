@@ -1,8 +1,8 @@
 #!/bin/bash
-# UserPromptSubmit hook for the "suno-artist-production-x" plugin.
+# UserPromptSubmit hook for the "suno-cowrite" plugin.
 #
 # 責務:
-#   1. トリガーターン (/suno-artist-production-x:studio のみのメッセージ) を判定して
+#   1. トリガーターン (/suno-cowrite:studio のみのメッセージ) を判定して
 #      TRIGGER_MARKER を立てる → PreToolUse (block-startup-tools.sh) がそれを見て
 #      対象ツールを物理ブロックする
 #   2. マネージャーモード起動中 (<work-dir>/.production/ACTIVE がある)、またはトリガーターンなら
@@ -78,21 +78,21 @@ esac
 
 PROD_DIR="$ARTIST_ROOT/.production"
 
-# === トリガーターン判定 (/suno-artist-production-x:studio のみ) ===
+# === トリガーターン判定 (/suno-cowrite:studio のみ) ===
 # マーカーは session_id + アーティストルート で一意化 (複数セッション並列でも相互干渉しない)
 SESSION_ID=$(printf '%s' "$SESSION_ID" | tr -cd 'A-Za-z0-9_-')
 [ -z "$SESSION_ID" ] && SESSION_ID="nosession"
 ROOT_HASH=$(printf '%s' "$ARTIST_ROOT" | python3 -c "import sys,hashlib; print(hashlib.sha1(sys.stdin.buffer.read()).hexdigest()[:12])" 2>/dev/null || echo "nohash")
-TRIGGER_MARKER="/tmp/suno-artist-production-x-trigger-${SESSION_ID}-${ROOT_HASH}"
+TRIGGER_MARKER="/tmp/suno-cowrite-trigger-${SESSION_ID}-${ROOT_HASH}"
 
 # 古いマーカー (60分以上前) を掃除して /tmp にゴミを溜めない
-find /tmp/ -maxdepth 1 -name 'suno-artist-production-x-trigger-*' -mmin +60 -delete 2>/dev/null || true
+find /tmp/ -maxdepth 1 -name 'suno-cowrite-trigger-*' -mmin +60 -delete 2>/dev/null || true
 
 TRIGGER_TURN=0
 rm -f "$TRIGGER_MARKER" 2>/dev/null || true
 if [ -n "$USER_PROMPT" ]; then
   STRIPPED=$(printf '%s' "$USER_PROMPT" \
-    | sed -E 's|/suno-artist-production-x:studio||g' \
+    | sed -E 's|/suno-cowrite:studio||g' \
     | tr -d '[:space:]、。!?！？～~・,\.\?\!')
   if [ -z "$STRIPPED" ]; then
     touch "$TRIGGER_MARKER" 2>/dev/null || true
@@ -117,7 +117,7 @@ NOW=$(date '+%H:%M')
 
 # === suno-spec の実効パス決定 (設計 §8-2: 上書き版の調査日が新しければ上書き版、なければ同梱版) ===
 BUNDLED_SPEC="$PLUGIN_ROOT/skills/suno-spec/references/spec.md"
-OVERRIDE_SPEC="${XDG_CONFIG_HOME:-${HOME:-}/.config}/suno-artist-production-x/suno-spec.md"
+OVERRIDE_SPEC="${XDG_CONFIG_HOME:-${HOME:-}/.config}/suno-cowrite/suno-spec.md"
 
 spec_date() {
   # ファイル先頭 30 行から「調査日: YYYY-MM-DD」を拾う (見つからなければ空)
@@ -148,7 +148,7 @@ if [ -n "$SPEC_PATH" ]; then
     # 未来日付 (時計ずれ等) でも「-1 日経過」とならないよう 0 でクランプする
     SPEC_AGE=$(python3 -c "import datetime as d; print(max(0, (d.date.today() - d.date.fromisoformat('$SPEC_DATE')).days))" 2>/dev/null || echo "")
     if [ -n "$SPEC_AGE" ] && [ "$SPEC_AGE" -gt 60 ] 2>/dev/null; then
-      SPEC_LINE="${SPEC_KIND} ${SPEC_PATH} (調査日: ${SPEC_DATE}、${SPEC_AGE} 日経過。60 日を超えているので /suno-artist-production-x:update-spec での再調査を P に提案してください)"
+      SPEC_LINE="${SPEC_KIND} ${SPEC_PATH} (調査日: ${SPEC_DATE}、${SPEC_AGE} 日経過。60 日を超えているので /suno-cowrite:update-spec での再調査を P に提案してください)"
     else
       SPEC_LINE="${SPEC_KIND} ${SPEC_PATH} (調査日: ${SPEC_DATE}、${SPEC_AGE:-?} 日経過)"
     fi
@@ -156,12 +156,12 @@ if [ -n "$SPEC_PATH" ]; then
     SPEC_LINE="${SPEC_KIND} ${SPEC_PATH} (調査日不明 — ヘッダに「調査日: YYYY-MM-DD」がありません)"
   fi
 else
-  SPEC_LINE="見つかりません (同梱版・上書き版とも不在)。/suno-artist-production-x:update-spec で作成できます"
+  SPEC_LINE="見つかりません (同梱版・上書き版とも不在)。/suno-cowrite:update-spec で作成できます"
 fi
 
 # === style-vocab (Style 語彙辞典) の実効パス決定 — spec と同一規則を流用。鮮度閾値のみ 90 日 (設計 D26) ===
 BUNDLED_VOCAB="$PLUGIN_ROOT/skills/suno-spec/references/style-vocab.md"
-OVERRIDE_VOCAB="${XDG_CONFIG_HOME:-${HOME:-}/.config}/suno-artist-production-x/style-vocab.md"
+OVERRIDE_VOCAB="${XDG_CONFIG_HOME:-${HOME:-}/.config}/suno-cowrite/style-vocab.md"
 
 VOCAB_BUNDLED_DATE=$(spec_date "$BUNDLED_VOCAB")
 VOCAB_OVERRIDE_DATE=$(spec_date "$OVERRIDE_VOCAB")
@@ -183,7 +183,7 @@ if [ -n "$VOCAB_PATH" ]; then
     # 未来日付 (時計ずれ等) でも「-1 日経過」とならないよう 0 でクランプする
     VOCAB_AGE=$(python3 -c "import datetime as d; print(max(0, (d.date.today() - d.date.fromisoformat('$VOCAB_DATE')).days))" 2>/dev/null || echo "")
     if [ -n "$VOCAB_AGE" ] && [ "$VOCAB_AGE" -gt 90 ] 2>/dev/null; then
-      VOCAB_LINE="${VOCAB_KIND} ${VOCAB_PATH} (調査日: ${VOCAB_DATE}、${VOCAB_AGE} 日経過。90 日を超えているので /suno-artist-production-x:update-spec (対象: style-vocab) での再調査を P に提案してください)"
+      VOCAB_LINE="${VOCAB_KIND} ${VOCAB_PATH} (調査日: ${VOCAB_DATE}、${VOCAB_AGE} 日経過。90 日を超えているので /suno-cowrite:update-spec (対象: style-vocab) での再調査を P に提案してください)"
     else
       VOCAB_LINE="${VOCAB_KIND} ${VOCAB_PATH} (調査日: ${VOCAB_DATE}、${VOCAB_AGE:-?} 日経過)"
     fi
@@ -241,7 +241,7 @@ fi
 
 # === 単曲制作コンテキストを毎ターン注入 (artist.yaml の有無は問わない) ===
 cat <<EOF
-[suno-artist-production-x — マネージャーモード / 単曲制作]
+[suno-cowrite — マネージャーモード / 単曲制作]
 
 ${PERSONA}
 - 作業ルート: ${ARTIST_ROOT}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""作品版歌詞 → Suno 入稿版歌詞 変換スクリプト (suno-artist-production-x)
+"""作品版歌詞 → Suno 入稿版歌詞 変換スクリプト (suno-cowrite)
 
 日本語の「作品版歌詞」(漢字かな交じり + 構成タグ) を、Suno 入稿版歌詞
 (かな主体 + 構成タグ) へ決定論的に機械変換する。作詞家が 2 版を手で書く

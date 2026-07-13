@@ -1,5 +1,5 @@
 {
-  "name": "suno-artist-marketplace-x",
+  "name": "suno-cowrite-marketplace",
   "version": "0.6.0",
   "owner": {
     "name": "kayu"
@@ -7,9 +7,9 @@
   "description": "Suno 用の単曲生成プラグインのマーケットプレイス",
   "plugins": [
     {
-      "name": "suno-artist-production-x",
+      "name": "suno-cowrite",
       "source": ".",
-      "description": "[v0.6.0] Suno 用の単曲生成プラグイン。/suno-artist-production-x:studio で起動。マネージャーが受付になり、2 つの制作フローへ振り分け — cowrite (対話共作・主役) はテーマから方向性 3 案 → style → 構成 → 節ごとの歌詞を対話で一緒に書き上げ、oneshot (高速) は簡易ブリーフ 1 発で songsmith が一括制作。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー) を貼り付け可能な形+JSONで出力。artist.yaml 不要。",
+      "description": "[v0.6.0] Suno 用の単曲生成プラグイン。/suno-cowrite:studio で起動。マネージャーが受付になり、2 つの制作フローへ振り分け — cowrite (対話共作・主役) はテーマから方向性 3 案 → style → 構成 → 節ごとの歌詞を対話で一緒に書き上げ、oneshot (高速) は簡易ブリーフ 1 発で songsmith が一括制作。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー) を貼り付け可能な形+JSONで出力。artist.yaml 不要。",
       "version": "0.6.0"
     }
   ]

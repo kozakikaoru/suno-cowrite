@@ -1,7 +1,7 @@
 #!/bin/bash
-# PreToolUse hook for the "suno-artist-production-x" plugin.
+# PreToolUse hook for the "suno-cowrite" plugin.
 # 2 種類の物理ブロックを担当する:
-#   1. トリガーターン (=/suno-artist-production-x:studio の起動直後ターン) は
+#   1. トリガーターン (=/suno-cowrite:studio の起動直後ターン) は
 #      Bash / Read / Grep / Glob / AskUserQuestion を exit 2 でブロックする (挨拶テキストだけのターン)。
 #      トリガーターン判定は UserPromptSubmit (inject-manager-context.sh) が
 #      session_id + アーティストルート で一意化したマーカーを作るかどうかで行う
@@ -58,12 +58,12 @@ fi
 SESSION_ID=$(printf '%s' "$SESSION_ID" | tr -cd 'A-Za-z0-9_-')
 [ -z "$SESSION_ID" ] && SESSION_ID="nosession"
 ROOT_HASH=$(printf '%s' "$ARTIST_ROOT" | python3 -c "import sys,hashlib; print(hashlib.sha1(sys.stdin.buffer.read()).hexdigest()[:12])" 2>/dev/null || echo "nohash")
-TRIGGER_MARKER="/tmp/suno-artist-production-x-trigger-${SESSION_ID}-${ROOT_HASH}"
+TRIGGER_MARKER="/tmp/suno-cowrite-trigger-${SESSION_ID}-${ROOT_HASH}"
 
 # --- 1. トリガーターン: 対象ツールすべてをブロック ---
 if [ -f "$TRIGGER_MARKER" ]; then
   cat >&2 <<EOF
-🚨 [suno-artist-production-x] studio 起動直後のターンは '${TOOL_NAME}' ツールは使えません。
+🚨 [suno-cowrite] studio 起動直後のターンは '${TOOL_NAME}' ツールは使えません。
 
 このターンは挨拶テキストだけを返してください。次の作業はすべて禁止:
   ❌ Bash 実行 (.production/ の scaffold・状況把握も含めて次のターン)
@@ -81,7 +81,7 @@ fi
 # --- 2. AskUserQuestion はマネージャーモード起動中つねにブロック ---
 if [ "$TOOL_NAME" = "AskUserQuestion" ] && [ -f "$ARTIST_ROOT/.production/ACTIVE" ]; then
   cat >&2 <<EOF
-🚨 [suno-artist-production-x] マネージャーモード起動中は AskUserQuestion (クリック式選択肢UI) は使えません。
+🚨 [suno-cowrite] マネージャーモード起動中は AskUserQuestion (クリック式選択肢UI) は使えません。
 質問はテキストで行ってください (ペルソナ会話の一貫性を保つための恒常ルールです)。
 EOF
   exit 2
