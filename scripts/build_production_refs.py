@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""制作コア (production references) の束ねビルダー (suno-artist-production / D38)
+"""制作コア (production references) の束ねビルダー (suno-artist-production-x / D38)
 
 制作エージェント (songsmith) が「毎回必読」する参照資料を、役割ごとに 1 ファイルへ
 連結して 1 回の Read で読めるようにする。**原本 (skills/composing・skills/songwriting の

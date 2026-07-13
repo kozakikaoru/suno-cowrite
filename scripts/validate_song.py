@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""song.json 検証スクリプト (suno-artist-production)
+"""song.json 検証スクリプト (suno-artist-production-x)
 
 song.json (Suno Custom Mode 入稿設定の canonical データ) を決定論的に検証し、
 人間可読の日本語レポートを stdout に出力する。Python 3 標準ライブラリのみで動く。

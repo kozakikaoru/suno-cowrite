@@ -1,4 +1,4 @@
-# 🎵 suno-artist-production plugin
+# 🎵 suno-artist-production-x plugin
 
 Suno (suno.com) 用の **単曲生成** プラグイン。マネージャー (受付ペルソナ) が窓口になり、**2 つの制作フロー**と **2 職種のサブエージェント** にタスクを振り分けて、Suno 楽曲を 1 曲ずつ企画・制作します。
 
@@ -43,11 +43,11 @@ Claude Code 内で以下を実行する:
 
 ```
 /plugin marketplace add kozakikaoru/suno_artist_production
-/plugin install suno-artist-production@suno-artist-marketplace
+/plugin install suno-artist-production-x@suno-artist-marketplace
 /reload-plugins
 ```
 
-`/plugin list` で `suno-artist-production` が表示されればインストール完了。以後 `/suno-artist-production:studio` で起動できる。
+`/plugin list` で `suno-artist-production-x` が表示されればインストール完了。以後 `/suno-artist-production-x:studio` で起動できる。
 
 ローカルで開発・検証する場合は次の起動も使える:
 
@@ -63,12 +63,12 @@ claude --plugin-dir /path/to/suno_artist_production
 
 ### 起動
 
-**`/suno-artist-production:studio`** で起動 (起動方法はこれのみ)。単曲制作用の作業ディレクトリで始めるのがおすすめ:
+**`/suno-artist-production-x:studio`** で起動 (起動方法はこれのみ)。単曲制作用の作業ディレクトリで始めるのがおすすめ:
 
 ```
 mkdir -p ~/Music/suno-songs && cd ~/Music/suno-songs
 claude
-> /suno-artist-production:studio        # ターン 1: マネージャーが状況付きで挨拶だけ返す
+> /suno-artist-production-x:studio        # ターン 1: マネージャーが状況付きで挨拶だけ返す
 > 夏っぽい切ない曲を一緒に作りたい          # ターン 2: 「一緒に/じっくり」なら cowrite (主役) へ
 > 夏っぽい切ない曲をパッと 1 曲            #          「パッと/サクッと」なら oneshot (高速) へ
 ```
@@ -79,7 +79,7 @@ claude
 
 | コマンド | 用途 |
 |---|---|
-| `/suno-artist-production:studio` | 起動 (メイン入口)。2 段階起動、以後は自然言語で全ユースケース |
+| `/suno-artist-production-x:studio` | 起動 (メイン入口)。2 段階起動、以後は自然言語で全ユースケース |
 | `:cowrite` | 対話共作 (主役)。テーマ → 方向性 3 案 → style → 構成 → 節ごとの歌詞 → 機械検証 → 入稿セット。対話状態は `.production/cowrite_<slug>.md` に保存 |
 | `:oneshot` | 単発曲制作 (高速。簡易ブリーフ → 一括制作 → 機械検証 → 入稿セット。既定では保存しない) |
 | `:update-spec` | Suno 仕様の再調査・更新 (上書き版 spec / style-vocab の生成) |
@@ -88,7 +88,7 @@ claude
 
 ### 起動時の挙動 (2 段階起動)
 
-**ターン 1** (`/suno-artist-production:studio` コマンドだけ): 挨拶テキストのみ、ツール使用ゼロ。hook が注入した状況 (`.production/state.md`) を使った「状況付き挨拶」を返す (`PreToolUse` フックが Bash/Read/Grep/Glob/AskUserQuestion を物理拒否)。
+**ターン 1** (`/suno-artist-production-x:studio` コマンドだけ): 挨拶テキストのみ、ツール使用ゼロ。hook が注入した状況 (`.production/state.md`) を使った「状況付き挨拶」を返す (`PreToolUse` フックが Bash/Read/Grep/Glob/AskUserQuestion を物理拒否)。
 
 **ターン 2** (具体的な指示): scaffold が走って `.production/` を用意し、依頼の処理を始める。
 
@@ -155,7 +155,7 @@ claude
 ```bash
 ls "$PWD/.production/ACTIVE"
 ```
-無ければ未起動 → `/suno-artist-production:studio` で起動。
+無ければ未起動 → `/suno-artist-production-x:studio` で起動。
 
 ### hook がエラーで動かない
 
