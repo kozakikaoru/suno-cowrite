@@ -1,6 +1,6 @@
 ---
 name: debut
-description: アーティスト誕生 (初期セットアップ)。「新しいアーティストを作りたい」「アーティストをデビューさせたい」「バーチャルシンガーを立ち上げたい」「アーティスト設定から始めたい」などの発言、または /suno-artist-production:debut で起動。ヒアリング → 演出家・キャラクターデザイナー・作曲家の並列提案 → P が選択 → アーティストディレクトリ一式 (artist.yaml / profile.md / world.md / character / discography / strategy) を生成し、YouTube 公開方針の確認と 1 曲目制作の提案までつなぐ。
+description: アーティスト誕生 (初期セットアップ)。「新しいアーティストを作りたい」「アーティストをデビューさせたい」「バーチャルシンガーを立ち上げたい」「アーティスト設定から始めたい」などの発言、または /suno-artist-production:debut で起動。ヒアリング → 演出家・キャラクターデザイナー・制作 (songsmith) の並列提案 → P が選択 → アーティストディレクトリ一式 (artist.yaml / profile.md / world.md / character / discography / strategy) を生成し、YouTube 公開方針の確認と 1 曲目制作の提案までつなぐ。
 ---
 
 # アーティスト誕生 — /suno-artist-production:debut
@@ -59,7 +59,7 @@ fi
 
 ## Step 2 — 三職種の並列提案
 
-director / character-designer / composer を **1 メッセージで並列起動**する (subagent_type: `suno-artist-production:director` / `suno-artist-production:character-designer` / `suno-artist-production:composer`)。
+director / character-designer / songsmith を **1 メッセージで並列起動**する (subagent_type: `suno-artist-production:director` / `suno-artist-production:character-designer` / `suno-artist-production:songsmith`)。
 
 各プロンプトに含めるもの:
 
@@ -73,10 +73,10 @@ director / character-designer / composer を **1 メッセージで並列起動*
 |---|---|
 | director | **世界観案**: テーマ / 物語の核 / 語彙パレット (使う言葉・避ける言葉) / NG 領域 + **ビジュアルの方向** (トーン&マナー・色。directing/04) / アーティスト名未定なら**名前候補** (directing/05) |
 | character-designer | **キャラ案**: 外見 / 性格 / 口調 / 年齢感 / NG 事項 |
-| composer | **サウンドアイデンティティ案**: 基準ジャンル帯 / 基準ボーカル像 / 代表的な Style タグ群 (英語) / 推奨既定モデル |
+| songsmith (制作) | **サウンドアイデンティティ案**: 基準ジャンル帯 / 基準ボーカル像 / 代表的な Style タグ群 (英語) / 推奨既定モデル |
 
-composer のプロンプトには **suno-spec の実効パス**を必ず明記する (hook 注入のコンテキストにある実効パス。未注入なら、上書き版 `${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/suno-spec.md` があればそれ、なければ `<プラグインルート>/skills/suno-spec/references/spec.md`)。「使用モデル・上限・タグ語彙は必ず spec を読んで従う」と指示する。
-あわせて **composing 資料の絶対パス** (`<プラグインルート>/skills/composing/SKILL.md` と `<プラグインルート>/skills/composing/references/`) も渡す (代表的な Style タグ群を `02_style-assembly.md` のレイヤー法で組ませる。「無ければ spec のみで進めてよい」と添える)。
+songsmith のプロンプトには「**デビュー用のサウンドアイデンティティ案だけ**を出して (歌詞・韻は今回は不要)」と明示し、**suno-spec の実効パス**を必ず添える (hook 注入のコンテキストにある実効パス。未注入なら、上書き版 `${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/suno-spec.md` があればそれ、なければ `<プラグインルート>/skills/suno-spec/references/spec.md`)。「使用モデル・上限・タグ語彙は必ず spec を読んで従う」と指示する。
+あわせて **composing 資料の絶対パス** (`<プラグインルート>/skills/composing/SKILL.md` と `<プラグインルート>/skills/composing/references/`) も渡す (代表的な Style タグ群を `02_style-assembly.md` のレイヤー法で組ませる。「無ければ spec のみで進めてよい」と添える。制作コア束ねは 1 曲目制作のときに渡せば足りる)。
 
 director のプロンプトには **directing 資料の絶対パス** (`<プラグインルート>/skills/directing/SKILL.md` と `<プラグインルート>/skills/directing/references/`) を渡す。「世界観を新規に作るので 01 を主に読み、ビジュアルの方向を出すなら 04、アーティスト名候補を出すなら 05 も読む (読み方ガイドは SKILL.md 側)。無ければ従来どおり world.md 起点で進めてよい」と添える。director の世界観案には **ビジュアルの方向 (トーン&マナー・色)** と (名前未定なら) **アーティスト名候補** を含めさせる (character-designer の並列出力とは Step 3 でマネージャーが統合する)。
 
@@ -100,7 +100,7 @@ mkdir -p "$ARTIST_ROOT/character/illust-prompts" \
 # 没案バンク — <アーティスト名>
 
 <!-- コンペの負け案・採用されなかったモチーフ・没タイトルを 1 行ずつ蓄積する。
-     director / lyricist がブリーフ・執筆時に参照して没案を再利用できる。あれば読む、無くても動く。 -->
+     director / songsmith がブリーフ・執筆時に参照して没案を再利用できる。あれば読む、無くても動く。 -->
 BONEYARD_EOF
 [ -f "$ARTIST_ROOT/strategy/producer-taste.md" ] || cat > "$ARTIST_ROOT/strategy/producer-taste.md" <<'TASTE_EOF'
 # P の好み台帳 — <アーティスト名>

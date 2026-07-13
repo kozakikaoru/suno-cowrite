@@ -6,7 +6,7 @@
 
 - 例 (架空のディスコグラフィー・曲の並び) はすべて自作の想定。実在アーティスト名・実在曲名・実在アルバム名は本文に書かない。
 - 物語の現在地の正は discography.md。この資料は方法論であり、「このアーティストのディスコグラフィーが今どうなっているか」は discography.md から読む。
-- 曲名は `songwriting/references/11_title-craft.md` (lyricist 主管)。シリーズ名・連作名・EP/アルバム名は 05_naming (director 主管)。この資料は「並べ方」を扱い、命名そのものは 05 へ渡す。
+- 曲名は `songwriting/references/11_title-craft.md` (songsmith の作詞工程が主管)。シリーズ名・連作名・EP/アルバム名は 05_naming (director 主管)。この資料は「並べ方」を扱い、命名そのものは 05 へ渡す。
 
 ## 1. ディスコグラフィーは物語
 

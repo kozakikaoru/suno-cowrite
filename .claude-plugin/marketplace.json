@@ -1,6 +1,6 @@
 {
   "name": "suno-artist-marketplace",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "owner": {
     "name": "kayu"
   },
@@ -9,8 +9,8 @@
     {
       "name": "suno-artist-production",
       "source": ".",
-      "description": "[v0.4.0] Suno 用バーチャル音楽プロダクション。/suno-artist-production:studio で起動。マネージャーが受付になり、演出家・作曲家・作詞家・ラッパー(客演)・リサーチャー・アナリスト・キャラクターデザイナーの7職種へ自動振り分け。1ディレクトリ=1アーティストで継続プロデュース。作曲知識ライブラリ (skills/composing) + Style 語彙辞典 (style-vocab) で作曲家を、演出ライブラリ (skills/directing) で演出家 (世界観・コンセプト・物語・ビジュアル方向・上位ネーミング) を拡張。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー/Persona運用) を貼り付け可能な形+JSONで出力。YouTube は公開データ分析に加え、任意で Analytics API 連携 (/suno-artist-production:connect-youtube) に対応。",
-      "version": "0.4.0"
+      "description": "[v0.5.0] Suno 用バーチャル音楽プロダクション。/suno-artist-production:studio で起動。マネージャーが受付になり、演出家・制作 (作曲/作詞/韻の統合)・リサーチャー・アナリスト・キャラクターデザイナーへ自動振り分け。1ディレクトリ=1アーティストで継続プロデュース。制作エージェント (songsmith) が 1 起動で Style + 歌詞 + 韻 + タイトルを一括制作。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー/Persona運用) を貼り付け可能な形+JSONで出力。YouTube は公開データ分析に加え、任意で Analytics API 連携 (/suno-artist-production:connect-youtube) に対応。",
+      "version": "0.5.0"
     }
   ]
 }

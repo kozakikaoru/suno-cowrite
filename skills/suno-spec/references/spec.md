@@ -6,7 +6,7 @@
 **要旨**: 現行フラッグシップは **v5.5** (2026-03-26、Pro/Premier 限定)。Free は v4.5-all のみ。Custom Mode 上限は **Style 1,000 字 / Lyrics 5,000 字 (実用 3,000 字) / Title 100 字**。旧 Persona は 2026-03 に **Voices メニューへ統合** (Style Persona / Voice の 2 系統)。継続プロデュースの主軸は **Style Persona + Custom Models (6 曲〜)**。公式 API は**未公開**。
 
 - 出典はすべて 2026-07-10 取得。確度 (High / Med-High / Med / Med-Low) は原調査レポートの評価を踏襲。
-- 読み方: composer は全節必読 (特に §1〜§3・§5・§6)。lyricist は §4・§7。マネージャーは §2・§3・§8。
+- 読み方: songsmith (制作) は使う節を読む — 作曲工程は §1〜§3・§5・§6、作詞工程は §4・§7。マネージャーは §2・§3・§8。
 
 ---
 
