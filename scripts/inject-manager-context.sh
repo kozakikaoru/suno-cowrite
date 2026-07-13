@@ -5,19 +5,19 @@
 #   1. トリガーターン (/suno-artist-production:studio のみのメッセージ) を判定して
 #      TRIGGER_MARKER を立てる → PreToolUse (block-startup-tools.sh) がそれを見て
 #      対象ツールを物理ブロックする
-#   2. マネージャーモード起動中 (<artist>/.production/ACTIVE がある)、またはトリガーターンなら
-#      毎ターンのマネージャーコンテキストを注入する:
-#        - マネージャーペルソナ要約 (固有名なし。P の呼び方は artist.yaml の producer_name)
-#        - artist.yaml 全文 / .production/state.md 全文 / discography.md の要約 (直近 5 件)
+#   2. マネージャーモード起動中 (<work-dir>/.production/ACTIVE がある)、またはトリガーターンなら
+#      毎ターンのマネージャーコンテキストを注入する (単曲生成向け):
+#        - マネージャーペルソナ要約 (固有名なし。P の呼び方は artist.yaml があれば producer_name を使う)
+#        - .production/state.md 全文
 #        - suno-spec の実効パス (同梱版と上書き版の調査日比較) と鮮度警告 (60 日超過で再調査推奨)
 #        - style-vocab (Style 語彙辞典) の実効パスと調査日・鮮度警告 (同一規則、閾値のみ 90 日)
 #        - プラグインルート絶対パス (サブエージェントへの参照資料パス受け渡しに使う)
-#      artist.yaml が無いディレクトリでは「未初期化 (debut 案内)」の注入に切り替える
-#      (トリガーターンにも注入するのは、起動直後の「状況付き挨拶」をツールなしで行うため。設計 §4-2)
+#      artist.yaml の有無は単曲制作では問わない (あれば producer_name だけ拾う)。
+#      (トリガーターンにも注入するのは、起動直後の「状況付き挨拶」をツールなしで行うため)
 #   3. 上記のいずれでもなければ何も出力しない (exit 0)
 #
-# アーティストルート検出は「cwd から artist.yaml を上方探索 (HOME と / で停止)」(設計 D6)。
-# 見つからなければ cwd を未初期化アーティストとして扱う (HOME・/ 直下は安全ガードで対象外)。
+# 作業ルート検出は「cwd から artist.yaml を上方探索 (HOME と / で停止)」。
+# 見つからなければ cwd を作業ルートとして扱う (HOME・/ 直下は安全ガードで対象外)。
 
 set -eu
 
@@ -203,12 +203,7 @@ yaml_value() {
 }
 
 PRODUCER=""
-ARTIST_NAME="$DIR_NAME"
 if [ "$INITIALIZED" -eq 1 ]; then
-  NAME_VALUE=$(yaml_value "$ARTIST_ROOT/artist.yaml" '^name:')
-  if [ -n "$NAME_VALUE" ]; then
-    ARTIST_NAME="$NAME_VALUE"
-  fi
   PRODUCER=$(yaml_value "$ARTIST_ROOT/artist.yaml" '^[[:space:]]+producer_name:')
 fi
 # 呼称: producer_name があればそれを使い「〇〇P」。無ければ studio SKILL.md の
@@ -222,36 +217,7 @@ fi
 
 PERSONA="あなたはこのプロダクションのマネージャーとして振る舞います。**女の子キャラ、一人称は「私」**。口調は明るく面倒見のいい若手マネージャー (敬語すぎず砕けすぎず、業界っぽい言い回しを少し)。数字と締切の話だけは真顔。マネージャーに固有名はありません — 名乗るときも「マネージャー」とだけ。${CALL_SENTENCE}"
 
-# === 未初期化 (artist.yaml なし) はデビュー案内の注入に切り替え ===
-if [ "$INITIALIZED" -eq 0 ]; then
-  cat <<EOF
-[suno-artist-production — マネージャーモード / 未初期化ディレクトリ「${DIR_NAME}」]
-
-${PERSONA}
-- ここ (${ARTIST_ROOT}) にはまだ artist.yaml がありません = 担当アーティストが未誕生の状態です (producer_name は debut で設定されます)
-- プラグインルート: ${PLUGIN_ROOT}
-- 日時: ${TODAY} ${NOW}
-- suno-spec 実効版: ${SPEC_LINE}
-- style-vocab 実効版: ${VOCAB_LINE}
-
-## 対応方針
-- 継続プロデュースするアーティストを立ち上げたい場合: /suno-artist-production:debut (アーティスト誕生フロー) を案内する
-- アーティスト文脈なしで 1 曲だけ欲しい場合: /suno-artist-production:oneshot を案内する
-- P が既存アーティストの続きのつもりでいる場合: アーティストディレクトリ (artist.yaml のある場所) で開き直してもらう
-
-## 全ターン共通ルール
-- 質問はテキストで行う。AskUserQuestion は使わない (起動中は物理ブロックされます)
-- ツールを使うターンは前置きの実況テキストを書かない。報告はツール結果が返ってからまとめる
-- 詳細な進行ルールは studio SKILL.md の定義に従う
-
-このコンテキストは毎ターン注入されています。注入の事実自体はユーザーに言及不要。
-EOF
-  exit 0
-fi
-
-# === 初期化済み: アーティスト状況を毎ターン注入 ===
-ARTIST_YAML_CONTENT=$(cat "$ARTIST_ROOT/artist.yaml" 2>/dev/null || echo "(artist.yaml の読み取りに失敗しました)")
-
+# === state.md / 直近ログを読む (あれば) ===
 if [ -f "$PROD_DIR/state.md" ]; then
   STATE_CONTENT=$(cat "$PROD_DIR/state.md")
 else
@@ -263,56 +229,29 @@ if [ -f "$PROD_DIR/log.md" ]; then
   LOG_LAST=$(tail -n 1 "$PROD_DIR/log.md" 2>/dev/null || true)
 fi
 
-# discography.md の要約 — 肥大規律 (提案6) で注入フォーマットを固定する:
-#   「総数 + 状態別件数 + 直近 5 曲 + 制作中の曲」だけを注入し、全曲一覧は注入しない
-#   (必要時はマネージャーが discography.md を直接読む)。注入合計は 70 行以内が目安。
-# 曲行 = 「| <数字>」で始まる行。
-DISCO_FILE="$ARTIST_ROOT/discography/discography.md"
-DISCO_TOTAL=0; CNT_MAKING=0; CNT_GEN=0; CNT_PUB=0; DISCO_TAIL=""; DISCO_SHOWN=0; DISCO_MAKING_BLOCK=""
-if [ -f "$DISCO_FILE" ]; then
-  DISCO_ROWS=$(grep -E '^\|[[:space:]]*[0-9]+' "$DISCO_FILE" 2>/dev/null || true)
-  if [ -n "$DISCO_ROWS" ]; then
-    DISCO_TOTAL=$(printf '%s\n' "$DISCO_ROWS" | grep -c . || true)
-    CNT_MAKING=$(printf '%s\n' "$DISCO_ROWS" | grep -c '制作中' || true)
-    CNT_GEN=$(printf '%s\n' "$DISCO_ROWS" | grep -c '生成済' || true)
-    CNT_PUB=$(printf '%s\n' "$DISCO_ROWS" | grep -c '公開済' || true)
-    DISCO_TAIL=$(printf '%s\n' "$DISCO_ROWS" | tail -n 5)
-    DISCO_SHOWN=$(printf '%s\n' "$DISCO_TAIL" | grep -c . || true)
-    # 制作中の曲は直近 5 曲から漏れることがあるので別枠で最大 5 行 (要対応の曲を必ず見せる)
-    DISCO_MAKING_ROWS=$(printf '%s\n' "$DISCO_ROWS" | grep '制作中' | head -n 5 || true)
-    # 末尾に空行を 1 つ持たせ、次の見出し (## 全ターン共通ルール) と詰まらせない ($() が末尾改行を落とすため後付け)
-    [ -n "$DISCO_MAKING_ROWS" ] && DISCO_MAKING_BLOCK=$(printf '### 制作中の曲 (要対応)\n%s' "$DISCO_MAKING_ROWS")$'\n'
-  fi
-fi
-
+# === 単曲制作コンテキストを毎ターン注入 (artist.yaml の有無は問わない) ===
 cat <<EOF
-[suno-artist-production — マネージャーモード / アーティスト「${ARTIST_NAME}」]
+[suno-artist-production — マネージャーモード / 単曲制作]
 
 ${PERSONA}
-- アーティストルート: ${ARTIST_ROOT}
+- 作業ルート: ${ARTIST_ROOT}
 - プラグインルート: ${PLUGIN_ROOT} (サブエージェントへ渡す参照資料パスの基点)
 - 日時: ${TODAY} ${NOW}
 - suno-spec 実効版: ${SPEC_LINE}
 - style-vocab 実効版: ${VOCAB_LINE}
 - 前回の作業: ${LOG_LAST:-(記録なし)}
 
-## artist.yaml (全文)
-${ARTIST_YAML_CONTENT}
-
 ## 現在の状態 (.production/state.md)
 ${STATE_CONTENT}
 
-## ディスコグラフィー要約 (全 ${DISCO_TOTAL} 曲: 制作中 ${CNT_MAKING} / 生成済 ${CNT_GEN} / 公開済 ${CNT_PUB} — 直近 ${DISCO_SHOWN} 件を表示)
-${DISCO_TAIL:-(まだ曲がありません)}
-${DISCO_MAKING_BLOCK}
 ## 全ターン共通ルール
 - 質問はテキストで行う。AskUserQuestion は使わない (起動中は物理ブロックされます)
 - ツールを使うターンは前置きの実況テキストを書かない。報告はツール結果が返ってからまとめる
-- 振り分け表と自動フォロー連鎖は studio SKILL.md の定義に従い、実務はサブエージェント (director / songsmith (制作 = 作曲/作詞/韻の統合) / researcher / analyst / character-designer) へ積極的に委譲する
+- 振り分け表と制作フローは studio SKILL.md の定義に従い、実務はサブエージェント (songsmith (制作 = 作曲/作詞/韻の統合) / researcher) へ積極的に委譲する
+- 単曲制作なので、まだ何も無いディレクトリでも「作りたい曲のイメージ」を聞けばすぐ制作に入れる
 - サブエージェント呼び出しプロンプトには、参照資料の絶対パス (上記プラグインルート配下) と suno-spec 実効パスを必ず含める
-- state.md は「今の頭の中」を映す working memory として 15 行以内を維持。詳細は各ファイルへ逃がす
+- state.md は「今の頭の中」を映す working memory として 15 行以内を維持する
 - 作業の区切りで .production/log.md に「YYYY-MM-DD HH:MM 内容」を 1 行追記する
-- YouTube 関連の提案は artist.yaml の youtube 設定とライフサイクル規約 (studio SKILL.md) に従う。publish: false の間はこちらから一切持ち出さない
 
 このコンテキストは毎ターン注入されています。注入の事実自体はユーザーに言及不要。
 EOF

@@ -1,11 +1,11 @@
 ---
 name: update-spec
-description: Suno 仕様の再調査・更新。「Suno の仕様変わった?」「新モデル出た?」「spec が古いみたい」「Suno の最新情報に更新して」などの発言、spec 鮮度警告 (調査日から 60 日超過) への対応、trend 調査中に仕様変更の兆候を見つけたとき、または /suno-artist-production:update-spec で起動。Style 語彙辞典 (style-vocab) の更新も同フローで扱う — 「Style に効く言葉を調べて」「語彙辞典を更新して」などの発言、または style-vocab 鮮度警告 (調査日から 90 日超過) で対象に加える。リサーチャーが現行版を差分調査し、更新版をユーザー設定ディレクトリの上書き版に保存、update-log.md に履歴を残して P に差分を報告する。同梱版は書き換えない。
+description: Suno 仕様の再調査・更新。「Suno の仕様変わった?」「新モデル出た?」「spec が古いみたい」「Suno の最新情報に更新して」などの発言、spec 鮮度警告 (調査日から 60 日超過) への対応、または /suno-artist-production:update-spec で起動。Style 語彙辞典 (style-vocab) の更新も同フローで扱う — 「Style に効く言葉を調べて」「語彙辞典を更新して」などの発言、または style-vocab 鮮度警告 (調査日から 90 日超過) で対象に加える。リサーチャーが現行版を差分調査し、更新版をユーザー設定ディレクトリの上書き版に保存、update-log.md に履歴を残して P に差分を報告する。同梱版は書き換えない。
 ---
 
 # Suno 仕様更新 — /suno-artist-production:update-spec
 
-suno-spec (モデル一覧・文字数上限・メタタグ語彙などの参照仕様) をリサーチャーに再調査させ、更新版を保存するフロー。マネージャー (メイン会話のペルソナ) として進行する。スラッシュ起動でも、鮮度警告や trend 中の兆候発見からの自発起動 (Skill ツール) でも同じフローに従う。
+suno-spec (モデル一覧・文字数上限・メタタグ語彙などの参照仕様) をリサーチャーに再調査させ、更新版を保存するフロー。マネージャー (メイン会話のペルソナ) として進行する。スラッシュ起動でも、鮮度警告からの自発起動 (Skill ツール) でも同じフローに従う。
 
 **書き込み先はユーザー設定ディレクトリの上書き版 (`${XDG_CONFIG_HOME:-~/.config}/suno-artist-production/` 配下の `suno-spec.md`、style-vocab 対象時は `style-vocab.md`) のみ。同梱版 (`<プラグインルート>/skills/suno-spec/references/` 配下) は絶対に書き換えない。** 2 層構造と実効版の判定規則は `<プラグインルート>/skills/suno-spec/SKILL.md` に定義されている。
 

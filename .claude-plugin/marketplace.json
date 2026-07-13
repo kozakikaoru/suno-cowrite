@@ -4,12 +4,12 @@
   "owner": {
     "name": "kayu"
   },
-  "description": "Suno 用バーチャル音楽プロダクションプラグインのマーケットプレイス",
+  "description": "Suno 用の単曲生成プラグインのマーケットプレイス",
   "plugins": [
     {
       "name": "suno-artist-production",
       "source": ".",
-      "description": "[v0.5.0] Suno 用バーチャル音楽プロダクション。/suno-artist-production:studio で起動。マネージャーが受付になり、演出家・制作 (作曲/作詞/韻の統合)・リサーチャー・アナリスト・キャラクターデザイナーへ自動振り分け。1ディレクトリ=1アーティストで継続プロデュース。制作エージェント (songsmith) が 1 起動で Style + 歌詞 + 韻 + タイトルを一括制作。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー/Persona運用) を貼り付け可能な形+JSONで出力。YouTube は公開データ分析に加え、任意で Analytics API 連携 (/suno-artist-production:connect-youtube) に対応。",
+      "description": "[v0.5.0] Suno 用の単曲生成プラグイン。/suno-artist-production:studio で起動。マネージャーが受付になり、制作 (songsmith = 作曲/作詞/韻の統合) とリサーチャー (Suno 仕様の再調査) へ自動振り分け。制作エージェント (songsmith) が 1 起動で Style + 歌詞 + 韻 + タイトルを一括制作。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー) を貼り付け可能な形+JSONで出力。単発 1 曲は /suno-artist-production:oneshot で完結 (artist.yaml 不要)。",
       "version": "0.5.0"
     }
   ]
