@@ -1,7 +1,7 @@
 {
   "name": "suno-artist-production",
-  "description": "[v0.5.0] Suno 用の単曲生成プラグイン。/suno-artist-production:studio で起動。マネージャーが受付になり、制作 (songsmith = 作曲/作詞/韻の統合) とリサーチャー (Suno 仕様の再調査) へ自動振り分け。制作エージェント (songsmith) が 1 起動で Style + 歌詞 + 韻 + タイトルを一括制作 (作曲/作詞/韻の作り込みノウハウは制作コア束ねに集約)。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー) を貼り付け可能な形+JSONで出力。単発 1 曲は /suno-artist-production:oneshot で完結 (artist.yaml 不要)。",
-  "version": "0.5.0",
+  "description": "[v0.6.0] Suno 用の単曲生成プラグイン。/suno-artist-production:studio で起動。マネージャーが受付になり、2 つの制作フローへ振り分け — cowrite (対話共作・主役) はテーマから方向性 3 案 → style → 構成 → 節ごとの歌詞を対話で一緒に書き上げ、oneshot (高速) は簡易ブリーフ 1 発で songsmith が一括制作。作曲/作詞/韻の作り込みノウハウは制作コア束ねに集約。入稿版歌詞は build_submission_lyrics.py で機械変換、validate_song.py で機械検証。Custom Mode 全設定値 (Title/Style/Lyrics/Exclude/スライダー) を貼り付け可能な形+JSONで出力。artist.yaml 不要。",
+  "version": "0.6.0",
   "author": {
     "name": "kayu"
   }

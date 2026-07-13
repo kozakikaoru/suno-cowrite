@@ -229,6 +229,16 @@ if [ -f "$PROD_DIR/log.md" ]; then
   LOG_LAST=$(tail -n 1 "$PROD_DIR/log.md" 2>/dev/null || true)
 fi
 
+# === 進行中の cowrite (対話共作) 作業ファイルの案内 (あれば最新の 1 件) ===
+# 対話状態はターンを跨ぐので、進行中の台帳へのポインタを注入して復元の入口にする。
+# 失敗しても注入全体を止めないよう全コマンドをガードする (set -eu 下)。
+COWRITE_LINE=""
+COWRITE_FILE=$(ls -t "$PROD_DIR"/cowrite_*.md 2>/dev/null | head -n 1 || true)
+if [ -n "$COWRITE_FILE" ]; then
+  COWRITE_STATE=$(grep -m1 -E '^- 現在の状態:' "$COWRITE_FILE" 2>/dev/null | sed -E 's/^- 現在の状態:[[:space:]]*//' 2>/dev/null || true)
+  COWRITE_LINE="${COWRITE_FILE}${COWRITE_STATE:+ — ${COWRITE_STATE}}"
+fi
+
 # === 単曲制作コンテキストを毎ターン注入 (artist.yaml の有無は問わない) ===
 cat <<EOF
 [suno-artist-production — マネージャーモード / 単曲制作]
@@ -240,6 +250,7 @@ ${PERSONA}
 - suno-spec 実効版: ${SPEC_LINE}
 - style-vocab 実効版: ${VOCAB_LINE}
 - 前回の作業: ${LOG_LAST:-(記録なし)}
+${COWRITE_LINE:+- 進行中の対話共作 (cowrite): ${COWRITE_LINE}}
 
 ## 現在の状態 (.production/state.md)
 ${STATE_CONTENT}
@@ -247,7 +258,8 @@ ${STATE_CONTENT}
 ## 全ターン共通ルール
 - 質問はテキストで行う。AskUserQuestion は使わない (起動中は物理ブロックされます)
 - ツールを使うターンは前置きの実況テキストを書かない。報告はツール結果が返ってからまとめる
-- 振り分け表と制作フローは studio SKILL.md の定義に従い、実務はサブエージェント (songsmith (制作 = 作曲/作詞/韻の統合) / researcher) へ積極的に委譲する
+- 振り分け表と制作フローは studio SKILL.md の定義に従う。制作は cowrite (対話でじっくり作る主役) と oneshot (1 発の高速) の 2 フロー、部分修正・調査はサブエージェント (songsmith / researcher) へ委譲する
+- 対話共作 (cowrite) が進行中なら、毎ターンまず上記の作業ファイルを読んで現在地 (S番号) を復元してから 1 ステップだけ進める
 - 単曲制作なので、まだ何も無いディレクトリでも「作りたい曲のイメージ」を聞けばすぐ制作に入れる
 - サブエージェント呼び出しプロンプトには、参照資料の絶対パス (上記プラグインルート配下) と suno-spec 実効パスを必ず含める
 - state.md は「今の頭の中」を映す working memory として 15 行以内を維持する
