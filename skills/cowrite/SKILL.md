@@ -1,6 +1,6 @@
 ---
 name: cowrite
-description: 対話共作 (テーマから対話でセクション毎に一緒に歌詞を書き上げる。Version X の主役フロー)。「一緒に歌詞作りたい」「対話で作りたい」「じっくり作りたい」「相談しながら書きたい」「セクションごとに一緒に」などの発言、または /suno-cowrite:cowrite で起動。S0 受付 → S1 方向性 3 案 → S2 確定 → S3 style → S4 構成 → S5 節執筆ループ → S6 アセンブリ (build_submission_lyrics.py で入稿版 → validate_song.py で機械検証) → S7 完成後。各ターンで 1 ステップ進み、P の OK で次へ。選択はテキスト番号 (AskUserQuestion は使わない)。対話状態は .production/cowrite_<slug>.md、正データ (song.json) は同名 .json に保存。artist.yaml 不要。
+description: 対話で歌詞を一緒に書き上げる主役フロー（じっくり派・「一緒に作りたい」）
 ---
 
 # 対話共作 — /suno-cowrite:cowrite

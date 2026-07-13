@@ -1,5 +1,5 @@
 ---
-description: Suno 仕様の参照資料コンテナ (実行フローを持つコマンドではない)。仕様本体は references/spec.md、Style 欄に効く非音楽語の辞典 (日本語の意図 → 英語記述子) は references/style-vocab.md。モデル選択・文字数上限・Advanced Options・メタタグ語彙・Style 記法・Persona/Voices/Custom Models・日本語入稿対策・プラン/商用権・API 状況を確認するときに読む。制作 (songsmith) は曲作りごとに必読 (作曲工程は全体、作詞工程はメタタグと日本語対策の節)、マネージャーは検証時に参照する。実効 spec / 実効 style-vocab の決め方 (ユーザー上書き版と同梱版の 2 層) と更新フロー (update-spec) への導線もここで定義する。
+description: Suno 仕様の参照資料（モデル・文字数上限・Style 記法・メタタグ）
 ---
 
 # Suno 仕様参照 — suno-spec

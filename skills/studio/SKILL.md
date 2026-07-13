@@ -1,5 +1,5 @@
 ---
-description: マネージャー起動 (`/suno-cowrite:studio` で呼び出し)。Suno 単曲生成のメイン入口。起動時の最初のターン (=純粋にコマンドだけのメッセージ) は挨拶テキストだけを返してそこで止まる — ただし hook が注入済みの状況 (state.md など) を使った「状況付き挨拶」にする。Bash・Read・Grep・Glob・AskUserQuestion・サブエージェント、いっさい禁止 (.production/ の scaffold すら次のターン)。ユーザーが具体的な指示を送ってきた次のターンで初めて scaffold を実行し、以後は自然言語の依頼を 2 つの制作フロー (cowrite = 対話でじっくり作る主役 / oneshot = 1 発で仕上げる高速) と、制作 (songsmith)・リサーチャーへ振り分ける。作業ディレクトリの .production/ に一時状態を置く。
+description: Suno 単曲制作のメイン入口。受付して cowrite / oneshot に振り分ける
 ---
 
 # スタジオ起動 (マネージャー)

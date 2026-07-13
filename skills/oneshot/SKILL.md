@@ -1,6 +1,6 @@
 ---
 name: oneshot
-description: 単発曲制作 (アーティスト文脈なし)。「単発で 1 曲だけ」「アーティスト関係なくパッと作って」「友達の結婚式用に 1 曲」「試しにサクッと作ってみたい」などの発言、または /suno-cowrite:oneshot で起動。マネージャーの簡易ブリーフ → 制作 (songsmith) が Style + 歌詞 + タイトルを一括制作 → build_submission_lyrics.py で入稿版を機械変換 → 機械検証 → チャットに入稿セットを提示。既定では保存せず、希望時のみ ./oneshot_<slug>.md に保存する。artist.yaml が無いディレクトリでも動く。
+description: 1 曲まるっとおまかせ生成する高速モード（「パッと1曲」）
 ---
 
 # 単発曲制作 — /suno-cowrite:oneshot
